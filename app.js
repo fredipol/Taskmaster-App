@@ -13,10 +13,11 @@ let memoryTimer=null;
 let drawingDistance=0;
 let starAnimationFrame=null;
 let humPitchInterval=null;
+let humPitchStartTimer=null;
 let humPitchEndTimer=null;
 let humMessageTimer=null;
-let humOscillator=null;
-let humGain=null;
+let humOscillators=[];
+let humGains=[];
 let humAudioContext=null;
 let popAudioContext=null;
 let ignoreScreenTapsUntil=0;
@@ -743,20 +744,20 @@ function starFollow() {
 }
 function stopHumPitch() {
   clearInterval(humPitchInterval);
+  clearTimeout(humPitchStartTimer);
   clearTimeout(humPitchEndTimer);
   clearTimeout(humMessageTimer);
   humPitchInterval=null;
+  humPitchStartTimer=null;
   humPitchEndTimer=null;
   humMessageTimer=null;
-  if(humOscillator) {
-    try { humOscillator.stop(); } catch {}
-    humOscillator.disconnect();
-    humOscillator=null;
-  }
-  if(humGain) {
-    humGain.disconnect();
-    humGain=null;
-  }
+  humOscillators.forEach(oscillator=>{
+    try { oscillator.stop(); } catch {}
+    oscillator.disconnect();
+  });
+  humOscillators=[];
+  humGains.forEach(gain=>gain.disconnect());
+  humGains=[];
 }
 function humPitch() {
   const AudioContextClass=window.AudioContext||window.webkitAudioContext;
@@ -766,38 +767,50 @@ function humPitch() {
   }
   screen.classList.remove('rule-page','dial-page','mindfulness-game','breathing-screen','relaxation-progress','drawing-screen','star-follow-screen');
   screen.classList.add('hum-pitch-screen');
-  screen.innerHTML='<h1>Hum along at the same pitch as the tone.</h1><p class="hum-status">Listen carefully.</p><div class="buttons hum-actions"></div>';
+  screen.innerHTML='<h1>Hum along as the two tones drift apart.</h1><p class="hum-status">Listen carefully.</p><div class="buttons hum-actions"></div>';
   addGreenSkip(()=>advanceGreenStage(relaxationProgress));
   humAudioContext ||= new AudioContextClass();
   humAudioContext.resume();
-  humOscillator=humAudioContext.createOscillator();
-  humGain=humAudioContext.createGain();
-  humOscillator.type='sine';
+  const oscillators=[humAudioContext.createOscillator(),humAudioContext.createOscillator()];
+  const gains=[humAudioContext.createGain(),humAudioContext.createGain()];
+  humOscillators=oscillators;
+  humGains=gains;
   const baseFrequency=220;
   const started=performance.now();
-  let pitch=1.4;
+  const pitches=[0,0];
   const frequencyAt=semitones=>baseFrequency*Math.pow(2,semitones/12);
-  humOscillator.frequency.setValueAtTime(frequencyAt(pitch),humAudioContext.currentTime);
-  humGain.gain.setValueAtTime(0,humAudioContext.currentTime);
-  humGain.gain.linearRampToValueAtTime(0.12,humAudioContext.currentTime+0.25);
-  humOscillator.connect(humGain).connect(humAudioContext.destination);
-  humOscillator.start();
+  const audioStart=humAudioContext.currentTime;
+  oscillators.forEach((oscillator,index)=>{
+    oscillator.type='sine';
+    oscillator.frequency.setValueAtTime(baseFrequency,audioStart);
+    gains[index].gain.setValueAtTime(0,audioStart);
+    gains[index].gain.linearRampToValueAtTime(0.065,audioStart+0.25);
+    oscillator.connect(gains[index]).connect(humAudioContext.destination);
+    oscillator.start(audioStart);
+  });
   const status=screen.querySelector('.hum-status');
   const actions=screen.querySelector('.hum-actions');
   humMessageTimer=setTimeout(()=>{status.textContent='Not quite...';},20000);
-  humPitchInterval=setInterval(()=>{
-    const movement=(Math.random()-0.5)*0.9;
-    pitch=Math.max(0,Math.min(4,pitch+movement));
-    const microtonalAdjustment=(Math.random()*0.24)-0.12;
-    const adjustedPitch=Math.max(0,Math.min(4,pitch+microtonalAdjustment));
+  const wanderTones=()=>{
     const now=humAudioContext.currentTime;
-    humOscillator.frequency.cancelScheduledValues(now);
-    humOscillator.frequency.setTargetAtTime(frequencyAt(adjustedPitch),now,0.45);
-  },1250);
+    oscillators.forEach((oscillator,index)=>{
+      const movement=(Math.random()-0.5)*3.2;
+      pitches[index]=Math.max(-8,Math.min(16,pitches[index]+movement));
+      const microtonalAdjustment=(Math.random()*0.5)-0.25;
+      oscillator.frequency.cancelScheduledValues(now);
+      oscillator.frequency.setTargetAtTime(frequencyAt(pitches[index]+microtonalAdjustment),now,0.5);
+    });
+  };
+  humPitchStartTimer=setTimeout(()=>{
+    wanderTones();
+    humPitchInterval=setInterval(wanderTones,900);
+  },3500);
   humPitchEndTimer=setTimeout(()=>{
     const now=humAudioContext.currentTime;
-    humGain.gain.cancelScheduledValues(now);
-    humGain.gain.setTargetAtTime(0,now,0.12);
+    gains.forEach(gain=>{
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setTargetAtTime(0,now,0.12);
+    });
     clearInterval(humPitchInterval);
     humPitchInterval=null;
     humPitchEndTimer=setTimeout(()=>{
