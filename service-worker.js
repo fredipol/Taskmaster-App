@@ -1,10 +1,11 @@
-const CACHE_NAME = 'taskmaster-app-v1';
+const CACHE_NAME = 'taskmaster-app-v2';
 const APP_FILES = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
+  './special-elite.ttf',
   './music.mp3',
   './Little%20Fred%20and%20the%20Pebble.m4a'
 ];

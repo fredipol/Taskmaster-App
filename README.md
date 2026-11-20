@@ -27,4 +27,4 @@ Open <http://localhost:8000> in a browser. To try it on an iPad, open the Mac's 
 - `manifest.json` — Home Screen web app settings
 - `music.mp3` — audio used in Relaxed Mode
 
-The app caches its page, code, styles, and both audio files before showing the welcome screen. After one successful load, it can continue working if the connection drops. The first load must finish while online, and offline use requires a browser that supports service workers (such as Safari over HTTPS or localhost). The typewriter text uses system fonts, so it does not need Google Fonts or an internet connection.
+The app caches its page, code, styles, Special Elite font, and both audio files before showing the welcome screen. After one successful load, it can continue working if the connection drops. The first load must finish while online, and offline use requires a browser that supports service workers (such as Safari over HTTPS or localhost). The font is bundled locally, so it does not need Google Fonts or an internet connection.

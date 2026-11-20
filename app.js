@@ -819,7 +819,7 @@ async function prepareOfflineApp() {
   }
 
   show({title:'Preparing the app…',text:'Downloading the files needed to use it offline.'});
-  screen.insertAdjacentHTML('beforeend', '<div class="startup-progress"><div class="startup-progress-track" role="progressbar" aria-label="Preparing offline files" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0"><div class="startup-progress-fill"></div></div><p class="startup-progress-label" aria-live="polite">Starting download…</p></div>');
+  screen.insertAdjacentHTML('beforeend', '<div class="startup-progress"><div class="startup-progress-track" role="progressbar" aria-label="Preparing offline files" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0"><div class="startup-progress-fill"></div></div><p class="startup-progress-label" aria-live="polite">Starting download…</p></div>');
   const progress = screen.querySelector('.startup-progress-track');
   const label = screen.querySelector('.startup-progress-label');
   const fill = screen.querySelector('.startup-progress-fill');
