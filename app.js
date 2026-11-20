@@ -19,9 +19,18 @@ let humOscillator=null;
 let humGain=null;
 let humAudioContext=null;
 let popAudioContext=null;
+let ignoreScreenTapsUntil=0;
 const skipMusicForTesting=false;
 
+screen.addEventListener('click', event => {
+  if (performance.now() < ignoreScreenTapsUntil) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+}, true);
+
 function show({pretitle='', title='', text='', choices=[], input=false, waitMs=0, skipTo=null, redSkipTo=null}={}) {
+  ignoreScreenTapsUntil=performance.now()+300;
   clearTimeout(waitTimer);
   clearTimeout(bubbleTimer);
   clearTimeout(breathingTimer);
@@ -803,4 +812,33 @@ function humPitch() {
   },Math.max(0,40000-(performance.now()-started)));
 }
 
-start();
+async function prepareOfflineApp() {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) {
+    start();
+    return;
+  }
+
+  show({title:'Preparing the app…',text:'Downloading the files needed to use it offline.'});
+  screen.insertAdjacentHTML('beforeend', '<div class="startup-progress"><div class="startup-progress-track" role="progressbar" aria-label="Preparing offline files" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0"><div class="startup-progress-fill"></div></div><p class="startup-progress-label" aria-live="polite">Starting download…</p></div>');
+  const progress = screen.querySelector('.startup-progress-track');
+  const label = screen.querySelector('.startup-progress-label');
+  const fill = screen.querySelector('.startup-progress-fill');
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data?.type !== 'offline-cache-progress' || !progress.isConnected) return;
+    const {completed, total, file} = event.data;
+    progress.setAttribute('aria-valuemax', total);
+    progress.setAttribute('aria-valuenow', completed);
+    fill.style.width = `${Math.round(completed / total * 100)}%`;
+    label.textContent = completed === total ? 'Ready to start.' : `Downloading ${file} (${completed} of ${total})`;
+  });
+  try {
+    await navigator.serviceWorker.register('./service-worker.js');
+    await navigator.serviceWorker.ready;
+  } catch (error) {
+    console.warn('Offline preparation failed; starting the app online.', error);
+    label.textContent = 'Could not prepare offline files. Starting the app…';
+  }
+  start();
+}
+
+prepareOfflineApp();
