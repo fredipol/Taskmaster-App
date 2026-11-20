@@ -767,7 +767,7 @@ function humPitch() {
   }
   screen.classList.remove('rule-page','dial-page','mindfulness-game','breathing-screen','relaxation-progress','drawing-screen','star-follow-screen');
   screen.classList.add('hum-pitch-screen');
-  screen.innerHTML='<h1>Hum along as the two tones drift apart.</h1><p class="hum-status">Listen carefully.</p><div class="buttons hum-actions"></div>';
+  screen.innerHTML='<h1>Hum along at the same pitch as the tone.</h1><p class="hum-status">Listen carefully.</p><div class="buttons hum-actions"></div>';
   addGreenSkip(()=>advanceGreenStage(relaxationProgress));
   humAudioContext ||= new AudioContextClass();
   humAudioContext.resume();
@@ -790,13 +790,13 @@ function humPitch() {
   });
   const status=screen.querySelector('.hum-status');
   const actions=screen.querySelector('.hum-actions');
-  humMessageTimer=setTimeout(()=>{status.textContent='Not quite...';},20000);
+  humMessageTimer=setTimeout(()=>{status.textContent='Not quite...';},30000);
   const wanderTones=()=>{
     const now=humAudioContext.currentTime;
     oscillators.forEach((oscillator,index)=>{
-      const movement=(Math.random()-0.5)*3.2;
-      pitches[index]=Math.max(-8,Math.min(16,pitches[index]+movement));
-      const microtonalAdjustment=(Math.random()*0.5)-0.25;
+      const movement=(Math.random()-0.5)*0.18;
+      pitches[index]=Math.max(-0.22,Math.min(0.22,pitches[index]+movement));
+      const microtonalAdjustment=(Math.random()*0.06)-0.03;
       oscillator.frequency.cancelScheduledValues(now);
       oscillator.frequency.setTargetAtTime(frequencyAt(pitches[index]+microtonalAdjustment),now,0.5);
     });
@@ -822,7 +822,7 @@ function humPitch() {
       button.addEventListener('click',()=>advanceGreenStage(relaxationProgress));
       actions.append(button);
     },350);
-  },Math.max(0,40000-(performance.now()-started)));
+  },Math.max(0,60000-(performance.now()-started)));
 }
 
 async function prepareOfflineApp() {
