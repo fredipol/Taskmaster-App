@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taskmaster-app-v2';
+const CACHE_NAME = 'taskmaster-app-v3';
 const APP_FILES = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const APP_FILES = [
   './app.js',
   './manifest.json',
   './special-elite.ttf',
+  './Crimson%20Wax%20Seal%20with%20ST%20Imprint.png',
   './music.mp3',
   './Little%20Fred%20and%20the%20Pebble.m4a'
 ];

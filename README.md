@@ -25,6 +25,7 @@ Open <http://localhost:8000> in a browser. To try it on an iPad, open the Mac's 
 - `style.css` — responsive, iPad-friendly presentation
 - `app.js` — screens, decision flow, passcode checks, games, and timers
 - `manifest.json` — Home Screen web app settings
+- `Crimson Wax Seal with ST Imprint.png` — opening interaction seal
 - `music.mp3` — audio used in Relaxed Mode
 
 The app caches its page, code, styles, Special Elite font, and both audio files before showing the welcome screen. After one successful load, it can continue working if the connection drops. The first load must finish while online, and offline use requires a browser that supports service workers (such as Safari over HTTPS or localhost). The font is bundled locally, so it does not need Google Fonts or an internet connection.

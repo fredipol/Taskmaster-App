@@ -1,6 +1,6 @@
 const screen = document.querySelector('#screen');
-const ENABLE_GREEN_STAGE_SKIP = true;
-const ENABLE_RED_STAGE_SKIP = true;
+const ENABLE_GREEN_STAGE_SKIP = false;
+const ENABLE_RED_STAGE_SKIP = false;
 let currentMode = 'UNDECIDED';
 let greenStagesSinceCheckIn=0;
 let passcodeSubmissionAttempts=0;
@@ -44,7 +44,7 @@ function show({pretitle='', title='', text='', choices=[], input=false, waitMs=0
   progressTimer=null;
   memoryTimer=null;
   starAnimationFrame=null;
-  screen.classList.remove('dial-page','mindfulness-game','breathing-screen','relaxation-progress','drawing-screen','star-follow-screen','hum-pitch-screen','memory-sequence-screen');
+  screen.classList.remove('dial-page','mindfulness-game','breathing-screen','relaxation-progress','drawing-screen','star-follow-screen','hum-pitch-screen','memory-sequence-screen','task-opening-screen','task-opening','task-opened');
   if (currentAudio) {
     currentAudio.pause();
     currentAudio=null;
@@ -114,9 +114,45 @@ function addRedSkip(action) {
 function start() {
   currentMode='UNDECIDED';
   document.body.className='';
-  show({title:'Welcome to the Taskmaster App, by Little Fred Pollard.',text:'Please pick a colour to start your journey.',choices:[
-    {label:'Blue',action:blueStart},{label:'Red',action:redStart},{label:'Green',action:greenStart}
-  ]});
+  showTaskOpening();
+}
+function showTaskOpening() {
+  show({});
+  screen.className='screen task-opening-screen';
+  screen.innerHTML='<div class="task-paper"><section class="task-reveal" aria-hidden="true"><h1>Choose a colour to start your journey.</h1><div class="buttons task-colour-choices"></div></section><div class="task-flap task-top-flap" aria-hidden="true"></div><div class="task-flap task-bottom-flap" aria-hidden="true"></div><div class="task-fold-line" aria-hidden="true"></div><button class="task-seal" type="button" aria-label="Swipe up on the wax seal to open your task"><img src="./Crimson%20Wax%20Seal%20with%20ST%20Imprint.png" alt="Wax seal"></button></div>';
+  const choices=screen.querySelector('.task-colour-choices');
+  [{label:'Red',action:redStart},{label:'Blue',action:blueStart},{label:'Green',action:greenStart}].forEach(({label,action})=>{
+    const button=document.createElement('button');
+    button.className='choice';
+    button.textContent=label;
+    button.addEventListener('click',action);
+    choices.append(button);
+  });
+  const seal=screen.querySelector('.task-seal');
+  let pointerStartY=null;
+  seal.addEventListener('pointerdown',event=>{
+    pointerStartY=event.clientY;
+    seal.setPointerCapture(event.pointerId);
+  });
+  seal.addEventListener('pointerup',event=>{
+    if(pointerStartY!==null && pointerStartY-event.clientY>45) openTaskPaper();
+    pointerStartY=null;
+  });
+  seal.addEventListener('pointercancel',()=>{pointerStartY=null;});
+  seal.addEventListener('keydown',event=>{
+    if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskPaper();}
+  });
+}
+function openTaskPaper() {
+  if(screen.classList.contains('task-opening')) return;
+  screen.classList.add('task-opening');
+  screen.querySelector('.task-seal').disabled=true;
+  setTimeout(()=>{
+    const reveal=screen.querySelector('.task-reveal');
+    if(!reveal) return;
+    reveal.setAttribute('aria-hidden','false');
+    screen.classList.add('task-opened');
+  },1900);
 }
 function blueStart() {
   currentMode='STANDARD';
@@ -794,9 +830,11 @@ function humPitch() {
   const wanderTones=()=>{
     const now=humAudioContext.currentTime;
     oscillators.forEach((oscillator,index)=>{
-      const movement=(Math.random()-0.5)*0.18;
-      pitches[index]=Math.max(-0.22,Math.min(0.22,pitches[index]+movement));
-      const microtonalAdjustment=(Math.random()*0.06)-0.03;
+      const movement=(Math.random()-0.5)*0.3;
+      const lowerLimit=index===0 ? -1.5 : 0.5;
+      const upperLimit=index===0 ? -0.5 : 1.5;
+      pitches[index]=Math.max(lowerLimit,Math.min(upperLimit,pitches[index]+movement));
+      const microtonalAdjustment=(Math.random()*0.1)-0.05;
       oscillator.frequency.cancelScheduledValues(now);
       oscillator.frequency.setTargetAtTime(frequencyAt(pitches[index]+microtonalAdjustment),now,0.5);
     });
@@ -832,7 +870,7 @@ async function prepareOfflineApp() {
   }
 
   show({title:'Preparing the app…',text:'Downloading the files needed to use it offline.'});
-  screen.insertAdjacentHTML('beforeend', '<div class="startup-progress"><div class="startup-progress-track" role="progressbar" aria-label="Preparing offline files" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0"><div class="startup-progress-fill"></div></div><p class="startup-progress-label" aria-live="polite">Starting download…</p></div>');
+  screen.insertAdjacentHTML('beforeend', '<div class="startup-progress"><div class="startup-progress-track" role="progressbar" aria-label="Preparing offline files" aria-valuemin="0" aria-valuemax="9" aria-valuenow="0"><div class="startup-progress-fill"></div></div><p class="startup-progress-label" aria-live="polite">Starting download…</p></div>');
   const progress = screen.querySelector('.startup-progress-track');
   const label = screen.querySelector('.startup-progress-label');
   const fill = screen.querySelector('.startup-progress-fill');
